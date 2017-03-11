@@ -1,0 +1,22 @@
+.c-menu-entry
+{
+    height: 5vh;
+    text-align: left;
+    cursor: pointer;
+}
+
+.c-menu-entry-text
+{
+    color: #FFF;
+}
+
+.c-menu-entry-text:hover
+{
+    color: #FCC51F;
+}
+
+.c-menu-entry-selected
+{
+    color: #FCC51F;
+    text-decoration: underline;
+}

@@ -1,0 +1,23 @@
+.c-control-view
+{
+    background: #DDD;
+    height: 100vh;
+}
+
+.c-control-view-selector
+{
+    height: 15vh;
+    padding-top: 5vh;
+    font-size: 1.25em;
+}
+
+.c-control-view-chart-container
+{
+    height: 75vh;
+}
+
+.c-control-view-chart
+{
+    height: 100%;
+    width: 100%;
+}

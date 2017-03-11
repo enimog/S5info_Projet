@@ -1,0 +1,17 @@
+.c-menu-header
+{
+    text-align: center;
+    height: 5vh;
+    line-height: 5vh;
+    margin-left: -15px;
+    margin-right: -15px;
+    margin-bottom: 2.5vh;
+    background: #FCC51F;
+}
+
+.c-menu-header-text
+{
+    color: #FFF;
+    font-size: 1.25em;
+    font-weight: bold;
+}
