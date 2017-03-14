@@ -1,0 +1,140 @@
+<div class='c-menu-controls'>
+    <div class="form-group">
+        <select id='fermentation-select' class="form-control">
+            <option value='-1'>Sélectionner</option>
+            <option *ngFor='let fermentation of fermentationList' value='{{fermentationList.indexOf(fermentation)}}'>{{fermentation.getId()}}</option>
+        </select>
+
+        <button type="button" class="btn btn-primary c-menu-controls-btn" data-toggle="modal" data-target="#new-modal">Nouveau</button>
+        <button type="button" class="btn btn-danger c-menu-controls-btn" data-toggle="modal" data-target="#end-modal">Terminer</button>
+    </div>
+</div>
+
+<!-- New Modal -->
+<div class="modal fade" id="new-modal" tabindex="-1" role="dialog" aria-labelledby="new-modal-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-modal-label">Nouveau</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class='row'>
+            <button type="button" class="btn btn-warning col-md-3 offset-md-2" data-dismiss="modal" data-toggle="modal" data-target="#new-recipe-modal">Recette</button>
+            <button type="button" class="btn btn-success col-md-3 offset-md-2" data-dismiss="modal" data-toggle="modal" data-target="#new-fermentation-modal">Fermentation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Recipe Modal -->
+<div class="modal fade" id="new-recipe-modal" tabindex="-1" role="dialog" aria-labelledby="new-recipe-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-recipe-modal-label">Nouvelle recette</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row">
+            <label for="new-recipe-description-input" class="col-3 col-form-label">Description</label>
+            <div class="col-9">
+                <textarea class="form-control" rows="3" placeholder='Description de la recette.' [(ngModel)]="newRecipeDescription" id="new-recipe-description-input"></textarea>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="new-recipe-temperature-input" class="col-3 col-form-label">Température (°C)</label>
+            <div class="col-9">
+                <input class="form-control" type="number" step='0.1' min='-5' max='100' [(ngModel)]="newRecipeTemperature" id="new-recipe-temperature-input">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="new-recipe-ph-input" class="col-3 col-form-label">Acidité (PH)</label>
+            <div class="col-9">
+                <input class="form-control" type="number" step='0.1' min='0' max='14' [(ngModel)]="newRecipePH" id="new-recipe-ph-input">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="new-recipe-alcohol-input" class="col-3 col-form-label">Taux d'alcool (%)</label>
+            <div class="col-9">
+                <input class="form-control" type="number" step='0.05' min='0' max='100' [(ngModel)]="newRecipeAlcohol" id="new-recipe-alcohol-input">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="new-recipe-sugar-input" class="col-3 col-form-label">Taux de sucre (mg/L)</label>
+            <div class="col-9">
+                <input class="form-control" type="number" step='0.1' min='0' [(ngModel)]="newRecipeSugar" id="new-recipe-sugar-input">
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" (click)='onNewRecipe()'>Créer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Fermentation Modal -->
+<div class="modal fade" id="new-fermentation-modal" tabindex="-1" role="dialog" aria-labelledby="new-fermentation-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="new-fermentation-modal-label">Nouvelle fermentation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row">
+            <label for="new-fermentation-description-input" class="col-3 col-form-label">Description</label>
+            <div class="col-9">
+                <textarea class="form-control" rows="3" placeholder='Description de la fermentation.' [(ngModel)]="newFermentationDescription" id="new-fermentation-description-input"></textarea>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="new-fermentation-location-input" class="col-3 col-form-label">Emplacement</label>
+            <div class="col-9">
+                <input class="form-control" type="text" [(ngModel)]="newFermentationLocation" id="new-fermentation-location-input">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="new-fermentation-recipe-input" class="col-3 col-form-label">Recette</label>
+            <div class="col-9">
+                <select id='new-fermentation-recipe-input' class="form-control">
+                    <option value='-1'>Aucune</option>
+                    <option *ngFor='let recipe of getRecipes()' value='{{recipe}}'>{{recipe}}</option>
+                </select>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal" (click)='onNewFermentation()'>Créer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End Modal -->
+<div *ngIf='selectedFermentation != -1' class="modal fade" id="end-modal" tabindex="-1" role="dialog" aria-labelledby="end-modal-label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="end-modal-label">Terminer la fermentation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Terminer la fermentation: <b>{{fermentationList[selectedFermentation].getId()}}</b> ?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal" (click)='onEnd()'>Terminer</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -16,6 +16,9 @@ export class ControlViewComponent implements OnInit, OnChanges
   @Input()
   value: number;
 
+  @Input()
+  fermentationId: number;
+
   temperature: number = 39.2;
   ph: number = 6.3;
   alcohol: number = 9.2;
@@ -36,26 +39,48 @@ export class ControlViewComponent implements OnInit, OnChanges
 
   onTemperatureChange()
   {
+    // TODO - POST new data to API
+
     console.log(this.temperature);
   }
 
   onPHChange()
   {
+    // TODO - POST new data to API
+
     console.log(this.ph);
   }
 
   onAlcoholChange()
   {
+    // TODO - POST new data to API
+
     console.log(this.alcohol);
   }
 
   onSugarChange()
   {
+    // TODO - POST new data to API
+    
     console.log(this.sugar);
+  }
+
+  getEmptyData(): any
+  {
+    // Create the data table.
+    let dataArray = [
+      ['Aucune donnée', 'Aucune donnée'],
+      ['0',  0],
+      ['100',  0]
+    ];
+
+    return w.google.visualization.arrayToDataTable(dataArray);
   }
 
   getTemperatureData(): any
   {
+    // TODO - GET data from API
+
     // Create the data table.
     let dataArray = [
       ['Time', 'Température (°C)'],
@@ -73,6 +98,8 @@ export class ControlViewComponent implements OnInit, OnChanges
 
   getPHData(): any
   {
+    // TODO - GET data from API
+
     // Create the data table.
     let dataArray = [
       ['Time', 'Acidité (PH)'],
@@ -96,6 +123,8 @@ export class ControlViewComponent implements OnInit, OnChanges
 
   getAlcoholData(): any
   {
+    // TODO - GET data from API
+
     // Create the data table.
     let dataArray = [
       ['Time', 'Taux d\'alcool (%)'],
@@ -111,6 +140,8 @@ export class ControlViewComponent implements OnInit, OnChanges
 
   getSugarData(): any
   {
+    // TODO - GET data from API
+
     // Create the data table.
     let dataArray = [
       ['Time', 'Taux de sucre (mg/L)'],
@@ -152,8 +183,12 @@ export class ControlViewComponent implements OnInit, OnChanges
   {
     let data: any;
     let options: any;
-
-    if(this.value == 0)
+    if(this.fermentationId == null)
+    {
+      data = this.getEmptyData();
+      options = this.getOptions('Aucune donnée');
+    }
+    else if(this.value == 0)
     {
       data = this.getTemperatureData();
       options = this.getOptions('Température');
@@ -209,6 +244,10 @@ export class ControlViewComponent implements OnInit, OnChanges
   ngOnChanges(changes: SimpleChanges)
   {
     if(changes['value'] && this.apiReady)
+    {
+      this.drawChart();
+    }
+    else if(changes['fermentationId'] && this.apiReady)
     {
       this.drawChart();
     }

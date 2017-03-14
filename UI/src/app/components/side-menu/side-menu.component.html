@@ -1,4 +1,5 @@
 <div class='c-side-menu col-md-12'>
     <menu-header [header]="menuHeader"></menu-header>
     <menu-entry *ngFor='let entry of menuEntries' [entry]='entry' (click)='onSelect(entry)'></menu-entry>
+    <menu-controls [fermentationList]='fermentationList' (selectedFermentation)="fermentationChanged($event)"></menu-controls>
 </div>

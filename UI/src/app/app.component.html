@@ -2,11 +2,11 @@
     <div class='c-app-row row'>
         
         <div class='c-app-component col-sm-4 col-md-3 col-lg-2'>
-            <side-menu [menuEntries]='menuEntries'></side-menu>
+            <side-menu [menuEntries]='menuEntries' [fermentationList]='fermentationList'></side-menu>
         </div>
 
         <div class='c-app-component col-sm-8 col-md-9 col-lg-10'>
-            <control-view [value]='getActiveElement()'></control-view>
+            <control-view [value]='getActiveMenuEntry()' [fermentationId]='getActiveFermentationId()'></control-view>
         </div>
 
     </div>
