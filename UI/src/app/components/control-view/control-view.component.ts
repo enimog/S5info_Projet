@@ -1,5 +1,11 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 
+import { RequestManagerService } from '../service/request-manager.service';
+
+import { Fermentation } from '../side-menu/components/menu-controls/fermentation.object';
+
+import dateformat from 'dateformat';
+
 var w: any;
 var d: any;
 
@@ -9,7 +15,10 @@ var d: any;
   styleUrls: ['./control-view.component.css'],
   host: {
     '(window:resize)': 'onResize($event)'
-  }
+  },
+  providers: [
+    RequestManagerService
+  ]
 })
 export class ControlViewComponent implements OnInit, OnChanges
 {
@@ -17,18 +26,13 @@ export class ControlViewComponent implements OnInit, OnChanges
   value: number;
 
   @Input()
-  fermentationId: number;
-
-  temperature: number = 39.2;
-  ph: number = 6.3;
-  alcohol: number = 9.2;
-  sugar: number = 3.1;
+  fermentation: Fermentation;
 
   chart: any;
   apiReady: boolean;
 
   
-  constructor()
+  constructor(private requestManagerService: RequestManagerService)
   {
     w = window;
     d = document;
@@ -39,30 +43,35 @@ export class ControlViewComponent implements OnInit, OnChanges
 
   onTemperatureChange()
   {
-    // TODO - POST new data to API
-
-    console.log(this.temperature);
+    let data = {"unit_id": this.fermentation.getId(), "field": "temperature", "value": this.fermentation.getTemperature()};
+    this.updateFermentationParameter(data);
   }
 
   onPHChange()
   {
-    // TODO - POST new data to API
-
-    console.log(this.ph);
+    let data = {"unit_id": this.fermentation.getId(), "field": "ph", "value": this.fermentation.getPH()};
+    this.updateFermentationParameter(data);
   }
 
   onAlcoholChange()
   {
-    // TODO - POST new data to API
-
-    console.log(this.alcohol);
+    let data = {"unit_id": this.fermentation.getId(), "field": "alcohol", "value": this.fermentation.getAlcohol()};
+  this.updateFermentationParameter(data);
   }
 
   onSugarChange()
   {
-    // TODO - POST new data to API
-    
-    console.log(this.sugar);
+    let data = {"unit_id": this.fermentation.getId(), "field": "sugar", "value": this.fermentation.getSugar()};
+    this.updateFermentationParameter(data);
+  }
+
+  updateFermentationParameter(data: any)
+  {
+    this.requestManagerService.updateUnitParam(data).subscribe(
+      data => { },
+      err => console.error(err),
+      () => null
+    );
   }
 
   getEmptyData(): any
@@ -77,93 +86,87 @@ export class ControlViewComponent implements OnInit, OnChanges
     return w.google.visualization.arrayToDataTable(dataArray);
   }
 
-  getTemperatureData(): any
+  getTemperatureData(): void
   {
-    // TODO - GET data from API
-
-    // Create the data table.
-    let dataArray = [
-      ['Time', 'Température (°C)'],
-      ['0',  (Math.random()*200.0)],
-      ['30',  (Math.random()*200.0)],
-      ['60',  (Math.random()*200.0)],
-      ['90',  (Math.random()*200.0)],
-      ['120',  (Math.random()*200.0)],
-      ['150',  (Math.random()*200.0)],
-      ['180',  (Math.random()*200.0)]
+    let dataArray: Array<Array<any>> = [
+      ['Time', 'Température (°C)']
     ];
 
-    return w.google.visualization.arrayToDataTable(dataArray);
+    this.requestManagerService.getTemperature(this.fermentation.getId()).subscribe(
+      data => {
+        for(let temperature of data['temperature'])
+        {
+          dataArray.push([dateformat(new Date(temperature['timestamp']), 'yy/mm/dd-HH:MM:ss'),  temperature['value']]);
+        }
+
+        this.chart.draw(w.google.visualization.arrayToDataTable(dataArray), this.getOptions('Température'));
+      },
+      err => console.error(err),
+      () => null
+    );
   }
 
-  getPHData(): any
+  getPHData(): void
   {
-    // TODO - GET data from API
-
     // Create the data table.
-    let dataArray = [
-      ['Time', 'Acidité (PH)'],
-      ['0',  (Math.random()*1000.0)],
-      ['30',  (Math.random()*1000.0)],
-      ['60',  (Math.random()*1000.0)],
-      ['90',  (Math.random()*1000.0)],
-      ['120',  (Math.random()*1000.0)],
-      ['150',  (Math.random()*1000.0)],
-      ['180',  (Math.random()*1000.0)],
-      ['210',  (Math.random()*1000.0)],
-      ['240',  (Math.random()*1000.0)],
-      ['270',  (Math.random()*1000.0)],
-      ['300',  (Math.random()*1000.0)],
-      ['330',  (Math.random()*1000.0)],
-      ['360',  (Math.random()*1000.0)]
+    let dataArray: Array<Array<any>> = [
+      ['Time', 'Acidité (PH)']
     ];
 
-    return w.google.visualization.arrayToDataTable(dataArray);
+    this.requestManagerService.getPH(this.fermentation.getId()).subscribe(
+      data => {
+        for(let ph of data['ph'])
+        {
+          dataArray.push([dateformat(new Date(ph['timestamp']), 'yy/mm/dd-HH:MM:ss'),  ph['value']]);
+        }
+
+        this.chart.draw(w.google.visualization.arrayToDataTable(dataArray), this.getOptions('Acidité'));
+      },
+      err => console.error(err),
+      () => null
+    );
   }
 
-  getAlcoholData(): any
+  getAlcoholData(): void
   {
-    // TODO - GET data from API
-
     // Create the data table.
-    let dataArray = [
+    let dataArray: Array<Array<any>> = [
       ['Time', 'Taux d\'alcool (%)'],
-      ['0',  (Math.random()*10.0)],
-      ['30',  (Math.random()*10.0)],
-      ['60',  (Math.random()*10.0)],
-      ['90',  (Math.random()*10.0)],
-      ['120',  (Math.random()*10.0)]
     ];
 
-    return w.google.visualization.arrayToDataTable(dataArray);
+    this.requestManagerService.getAlcohol(this.fermentation.getId()).subscribe(
+      data => {
+        for(let alcohol of data['alcohol'])
+        {
+          dataArray.push([dateformat(new Date(alcohol['timestamp']), 'yy/mm/dd-HH:MM:ss'),  alcohol['value']]);
+        }
+
+        this.chart.draw(w.google.visualization.arrayToDataTable(dataArray), this.getOptions('Taux d\'alcool'));
+      },
+      err => console.error(err),
+      () => null
+    );
   }
 
-  getSugarData(): any
+  getSugarData(): void
   {
-    // TODO - GET data from API
-
     // Create the data table.
-    let dataArray = [
-      ['Time', 'Taux de sucre (mg/L)'],
-      ['0',  (Math.random()*50.0)],
-      ['30',  (Math.random()*50.0)],
-      ['60',  (Math.random()*50.0)],
-      ['90',  (Math.random()*50.0)],
-      ['120',  (Math.random()*50.0)],
-      ['150',  (Math.random()*50.0)],
-      ['180',  (Math.random()*50.0)],
-      ['210',  (Math.random()*50.0)],
-      ['240',  (Math.random()*50.0)],
-      ['270',  (Math.random()*50.0)],
-      ['300',  (Math.random()*50.0)],
-      ['330',  (Math.random()*50.0)],
-      ['360',  (Math.random()*50.0)],
-      ['390',  (Math.random()*50.0)],
-      ['420',  (Math.random()*50.0)],
-      ['450',  (Math.random()*50.0)]
+    let dataArray: Array<Array<any>> = [
+      ['Time', 'Taux de sucre (mg/L)']
     ];
 
-    return w.google.visualization.arrayToDataTable(dataArray);
+    this.requestManagerService.getSugar(this.fermentation.getId()).subscribe(
+      data => {
+        for(let sugar of data['sugar'])
+        {
+          dataArray.push([dateformat(new Date(sugar['timestamp']), 'yy/mm/dd-HH:MM:ss'),  sugar['value']]);
+        }
+
+        this.chart.draw(w.google.visualization.arrayToDataTable(dataArray), this.getOptions('Taux de sucre'));
+      },
+      err => console.error(err),
+      () => null
+    );
   }
 
   getOptions(chartTitle: string): any
@@ -183,35 +186,29 @@ export class ControlViewComponent implements OnInit, OnChanges
   {
     let data: any;
     let options: any;
-    if(this.fermentationId == null)
+
+    if(this.fermentation == null)
     {
       data = this.getEmptyData();
       options = this.getOptions('Aucune donnée');
+      this.chart.draw(data, options);
     }
     else if(this.value == 0)
     {
-      data = this.getTemperatureData();
-      options = this.getOptions('Température');
+      this.getTemperatureData();
     }
     else if(this.value == 1)
     {
-      data = this.getPHData();
-      options = this.getOptions('Acidité');
+      this.getPHData();
     }
     else if(this.value == 2)
     {
-      data = this.getAlcoholData();
-      options = this.getOptions('Taux d\'alcool');
+      this.getAlcoholData();
     }
     else if(this.value == 3)
     {
-      data = this.getSugarData();
-      options = this.getOptions('Taux de sucre');
+      this.getSugarData();
     }
-
-    // Instantiate and draw our chart, passing in some options.
-    
-    this.chart.draw(data, options);
   }
 
   ngOnInit()
@@ -247,7 +244,7 @@ export class ControlViewComponent implements OnInit, OnChanges
     {
       this.drawChart();
     }
-    else if(changes['fermentationId'] && this.apiReady)
+    else if(changes['fermentation'] && this.apiReady)
     {
       this.drawChart();
     }

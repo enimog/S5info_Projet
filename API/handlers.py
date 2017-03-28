@@ -3,8 +3,38 @@ import json
 
 from http import HTTPStatus
 import tornado.web
+import sqlite3
 
-class RootHandler(tornado.web.RequestHandler):
+
+SENSOR_TYPE_TEMPERATURE = 1
+SENSOR_TYPE_PH = 2
+SENSOR_TYPE_ALCOHOL = 3
+SENSOR_TYPE_SUGAR = 4
+
+
+class BaseHandler(tornado.web.RequestHandler):
+
+    db_conn = None
+
+    def initialize(self):
+        self.db_conn = sqlite3.connect('E:\\MaximeBreton\\OneDrive\\Documents\\universite\\s5\\projet\\Project.db')
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with, Content-Type")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, PUT, OPTIONS')
+
+
+    def options(self):
+
+        self.set_status(204)
+        self.finish()
+
+    def on_finish(self):
+        self.db_conn.close()
+
+
+class RootHandler(BaseHandler):
 
     def get(self):
 
@@ -25,14 +55,18 @@ class RootHandler(tornado.web.RequestHandler):
         self.set_status(HTTPStatus.OK)
 
 
-class RecipesHandler(tornado.web.RequestHandler):
+class RecipesHandler(BaseHandler):
 
     def get(self):
 
-        # TODO make call to DB to get real data
-        recipes = {'recipes': [ \
-        {'id': 1, 'name': 'recipe1', 'description': 'Bonne', 'target_temperature': 41.3, 'target_ph': 6.7, 'target_alcohol': 9.5, 'target_sugar': 27}, \
-        {'id': 2, 'name': 'recipe2', 'description': 'Excellente', 'target_temperature': 39.1, 'target_ph': 6.6, 'target_alcohol': 5, 'target_sugar': 12}]}
+        cursor = self.db_conn.execute('SELECT * from recipe')
+
+        recipes_list = []
+        for row in cursor:
+            temp_recipe = {'id': row[0], 'name': row[1], 'description': row[2], 'target_temperature': row[3], 'target_ph': row[4], 'target_alcohol': row[5], 'target_sugar': row[6]}
+            recipes_list.append(temp_recipe)
+
+        recipes = {'recipes': recipes_list}
 
         self.write(recipes)
         self.set_status(HTTPStatus.OK)
@@ -61,41 +95,61 @@ class RecipesHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(recipe_temperature, float):
-            self.write("Recipe temperature must be of type float.")
+        if not (isinstance(recipe_temperature, float) or isinstance(recipe_temperature, int)):
+            self.write("Recipe temperature must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(recipe_ph, float):
-            self.write("Recipe ph must be of type float.")
+        if not (isinstance(recipe_ph, float) or isinstance(recipe_ph, int)):
+            self.write("Recipe ph must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(recipe_alcohol, float):
-            self.write("Recipe alcohol must be of type float.")
+        if not (isinstance(recipe_alcohol, float) or isinstance(recipe_alcohol, int)):
+            self.write("Recipe alcohol must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(recipe_sugar, float):
-            self.write("Recipe sugar must be of type float.")
+        if not (isinstance(recipe_sugar, float) or isinstance(recipe_sugar, int)):
+            self.write("Recipe sugar must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to post data and return id 
+        # Insert into DB
+        query = "INSERT INTO recipe (name, description, target_temperature, target_ph, target_alcohol, target_sugar) VALUES ('" + \
+        recipe_name + "','" + \
+        recipe_description + "'," + \
+        str(recipe_temperature) + "," + \
+        str(recipe_ph) + "," + \
+        str(recipe_alcohol) + "," + \
+        str(recipe_sugar) + ")"
+        
+        self.db_conn.execute(query)
+        new_id = None
+        cursor = self.db_conn.execute("SELECT last_insert_rowid()")
+        for row in cursor:
+            new_id = row[0]
+        self.db_conn.commit()
 
-        self.write({'id': -1})
+        self.write({'id': new_id})
         self.set_status(HTTPStatus.OK)
 
 
-class UnitsHandler(tornado.web.RequestHandler):
+class UnitsHandler(BaseHandler):
 
     def get(self):
 
-        # TODO make call to DB to get real data
-        units = {'units': [ \
-        {'id': 3, 'recipe_id': 1, 'description': 'Biere dans mon sous-sol', 'start_date': '2017/03/19', 'is_active': True, 'location': 'Sherbrooke'}, \
-        {'id': 4, 'recipe_id': 1, 'description': 'Vin de pissenlit', 'start_date': '2017/02/23', 'is_active': True, 'location': 'Magog'}, \
-        {'id': 5, 'recipe_id': 2, 'description': 'Porto rouge', 'start_date': '2017/03/16', 'is_active': True, 'location': 'Drumundville'}]}
+        cursor = self.db_conn.execute('SELECT * from fermentation_unit')
+
+        units_list = []
+        for row in cursor:
+            temp_unit = {'id': row[0], 'name': row[1], 'description': row[2], \
+            'recipe_id': row[3], 'start_date': row[4], 'is_active': bool(row[5]), \
+            'location': row[6], 'temperature': row[7], 'ph': row[8], \
+            'alcohol': row[9], 'sugar': row[10]}
+            units_list.append(temp_unit)
+
+        units = {'units': units_list}
 
         self.write(units)
         self.set_status(HTTPStatus.OK)
@@ -106,15 +160,16 @@ class UnitsHandler(tornado.web.RequestHandler):
         units = json.loads(self.request.body.decode('utf-8'))
 
         # Parsing received values
-        unit_recipe_id = units['recipe_id']
+        unit_name = units['name']
         unit_description = units['description']
+        unit_recipe_id = units['recipe_id']
         unit_start_date = units['start_date']
         unit_is_active = units['is_active']
         unit_location = units['location']
 
         # Validation of received values
-        if not isinstance(unit_recipe_id, int):
-            self.write("Unit recipe ID must be of type int.")
+        if not isinstance(unit_name, str):
+            self.write("Unit recipe name must be of type string.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
@@ -123,7 +178,12 @@ class UnitsHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(unit_start_date, str):
+        if not isinstance(unit_recipe_id, int):
+            self.write("Unit recipe ID must be of type int.")
+            self.set_status(HTTPStatus.BAD_REQUEST)
+            return
+
+        if not isinstance(unit_start_date, int):
             self.write("Unit start date must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
@@ -138,33 +198,103 @@ class UnitsHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to post data and return id 
 
-        self.write({'id': -1})
+        recipe_temperature = 0
+        recipe_ph = 0
+        recipe_alcohol = 0
+        recipe_sugar = 0
+        if unit_recipe_id > 0:
+            cursor = self.db_conn.execute('SELECT * from recipe where id = ' + str(unit_recipe_id))
+
+            for row in cursor:
+                recipe_temperature = row[3]
+                recipe_ph = row[4]
+                recipe_alcohol = row[5]
+                recipe_sugar = row[6]
+
+        # Insert into DB
+        query = "INSERT INTO fermentation_unit (name, description, recipe_id, start_date, is_active, location, temperature, ph, alcohol, sugar) VALUES ('" + \
+        unit_name + "','" + \
+        unit_description + "'," + \
+        str(unit_recipe_id) + "," + \
+        str(unit_start_date) + "," + \
+        str(int(unit_is_active)) + ",'" + \
+        unit_location + "'," + \
+        str(recipe_temperature) + "," + \
+        str(recipe_ph) + "," + \
+        str(recipe_alcohol) + "," + \
+        str(recipe_sugar) + ")"
+        
+        self.db_conn.execute(query)
+        new_id = None
+        cursor = self.db_conn.execute("SELECT last_insert_rowid()")
+        for row in cursor:
+            new_id = row[0]
+        self.db_conn.commit()
+
+        self.write({'id': new_id})
         self.set_status(HTTPStatus.OK)
 
 
-class TemperatureHandler(tornado.web.RequestHandler):
+    def put(self):
+
+        update = json.loads(self.request.body.decode('utf-8'))
+
+        unit_id = update['unit_id']
+        field = update['field']
+        value = update['value']
+
+        if not isinstance(unit_id, int):
+            self.write("Unit ID must be of type int.")
+            self.set_status(HTTPStatus.BAD_REQUEST)
+            return
+
+        if not isinstance(field, str):
+            self.write("Unit is active must be of type string.")
+            self.set_status(HTTPStatus.BAD_REQUEST)
+            return
+
+        if not (isinstance(value, float) or isinstance(value, int) or isinstance(value, bool)):
+            self.write("Unit location must be of type float or int or bool.")
+            self.set_status(HTTPStatus.BAD_REQUEST)
+            return
+
+        if field == 'is_active':
+            query = "UPDATE fermentation_unit SET " + field + " = " + str(int(value)) + " WHERE id = " + str(unit_id)
+        else:
+            query = "UPDATE fermentation_unit SET " + field + " = " + str(value) + " WHERE id = " + str(unit_id)
+
+        self.db_conn.execute(query)
+        self.db_conn.commit()
+
+        self.write({'id': unit_id})
+        self.set_status(HTTPStatus.OK)
+
+
+class TemperatureHandler(BaseHandler):
 
     def get(self, slug):
 
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to get real data
-        temperature = {'temperature': [ \
-        {'id': 6, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 0), 'value': 10.0}, \
-        {'id': 7, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 30), 'value': 10.5}, \
-        {'id': 8, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 60), 'value': 12.0}, \
-        {'id': 9, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 90), 'value': 15.1}, \
-        {'id': 10, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 120), 'value': 18.6}, \
-        {'id': 11, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 150), 'value': 23.3}, \
-        {'id': 12, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 180), 'value': 22.1}]}
+        cursor = self.db_conn.execute("SELECT * FROM (SELECT * FROM measure where \
+        parent_unit_id = " + str(parent_unit_id) + " and sensor_type = " + str(SENSOR_TYPE_TEMPERATURE) \
+        + " order by timestamp desc) limit 100")
 
-        self.write(temperature)
+        measure_list = []
+        for row in cursor:
+            temp_measure = {'id': row[1], 'parent_unit_id': row[2], \
+            'timestamp': row[3], 'value': row[4]}
+            measure_list.append(temp_measure)
+
+        measures = {'temperature': measure_list}
+
+        self.write(measures)
         self.set_status(HTTPStatus.OK)
 
 
@@ -173,6 +303,7 @@ class TemperatureHandler(tornado.web.RequestHandler):
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
@@ -187,35 +318,53 @@ class TemperatureHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(temperature_value, float):
-            self.write("Temperature value must be of type float.")
+        if not (isinstance(temperature_value, float) or isinstance(temperature_value, int)):
+            self.write("Temperature value must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to post data and return id 
+        # Insert into DB
+        query = "INSERT INTO measure (parent_unit_id, sensor_type, timestamp, value) VALUES (" + \
+        str(parent_unit_id) + "," + \
+        str(SENSOR_TYPE_TEMPERATURE) + "," + \
+        str(temperature_timestamp) + "," + \
+        str(temperature_value) + ")"
 
-        self.write({'id': -1})
+        self.db_conn.execute(query)
+        new_id = None
+        cursor = self.db_conn.execute("SELECT last_insert_rowid()")
+        for row in cursor:
+            new_id = row[0]
+        self.db_conn.commit()
+
+        self.write({'id': new_id})
         self.set_status(HTTPStatus.OK)
 
 
-class PHHandler(tornado.web.RequestHandler):
+class PHHandler(BaseHandler):
 
     def get(self, slug):
 
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to get real data
-        ph = {'ph': [ \
-        {'id': 13, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 0), 'value': 6.6}, \
-        {'id': 14, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 30), 'value': 6.7}, \
-        {'id': 15, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 60), 'value': 6.5}, \
-        {'id': 16, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 90), 'value': 6.7}]}
+        cursor = self.db_conn.execute("SELECT * FROM (SELECT * FROM measure where \
+        parent_unit_id = " + str(parent_unit_id) + " and sensor_type = " + str(SENSOR_TYPE_PH) \
+        + " order by timestamp desc) limit 100")
 
-        self.write(ph)
+        measure_list = []
+        for row in cursor:
+            temp_measure = {'id': row[1], 'parent_unit_id': row[2], \
+            'timestamp': row[3], 'value': row[4]}
+            measure_list.append(temp_measure)
+
+        measures = {'ph': measure_list}
+
+        self.write(measures)
         self.set_status(HTTPStatus.OK)
 
 
@@ -224,6 +373,7 @@ class PHHandler(tornado.web.RequestHandler):
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
@@ -238,41 +388,53 @@ class PHHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(ph_value, float):
-            self.write("PH value must be of type float.")
+        if not (isinstance(ph_value, float) or isinstance(ph_value, int)):
+            self.write("PH value must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to post data and return id 
+        # Insert into DB
+        query = "INSERT INTO measure (parent_unit_id, sensor_type, timestamp, value) VALUES (" + \
+        str(parent_unit_id) + "," + \
+        str(SENSOR_TYPE_PH) + "," + \
+        str(ph_timestamp) + "," + \
+        str(ph_value) + ")"
 
-        self.write({'id': -1})
+        self.db_conn.execute(query)
+        new_id = None
+        cursor = self.db_conn.execute("SELECT last_insert_rowid()")
+        for row in cursor:
+            new_id = row[0]
+        self.db_conn.commit()
+
+        self.write({'id': new_id})
         self.set_status(HTTPStatus.OK)
 
 
-class AlcoholHandler(tornado.web.RequestHandler):
+class AlcoholHandler(BaseHandler):
 
     def get(self, slug):
 
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to get real data
-        alcohol = {'alcohol': [ \
-        {'id': 17, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 0), 'value': 1.1}, \
-        {'id': 18, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 30), 'value': 1.4}, \
-        {'id': 19, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 60), 'value': 2.0}, \
-        {'id': 20, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 90), 'value': 2.9}, \
-        {'id': 21, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 120), 'value': 2.9}, \
-        {'id': 22, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 150), 'value': 3.3}, \
-        {'id': 23, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 180), 'value': 3.8}, \
-        {'id': 24, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 210), 'value': 4.1}, \
-        {'id': 25, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 240), 'value': 4.7}, \
-        {'id': 26, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 270), 'value': 5.0}]}
+        cursor = self.db_conn.execute("SELECT * FROM (SELECT * FROM measure where \
+        parent_unit_id = " + str(parent_unit_id) + " and sensor_type = " + str(SENSOR_TYPE_ALCOHOL) \
+        + " order by timestamp desc) limit 100")
 
-        self.write(alcohol)
+        measure_list = []
+        for row in cursor:
+            temp_measure = {'id': row[1], 'parent_unit_id': row[2], \
+            'timestamp': row[3], 'value': row[4]}
+            measure_list.append(temp_measure)
+
+        measures = {'alcohol': measure_list}
+
+        self.write(measures)
         self.set_status(HTTPStatus.OK)
 
 
@@ -281,6 +443,7 @@ class AlcoholHandler(tornado.web.RequestHandler):
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
@@ -295,40 +458,53 @@ class AlcoholHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(alcohol_value, float):
-            self.write("Alcohol value must be of type float.")
+        if not (isinstance(alcohol_value, float) or isinstance(alcohol_value, int)):
+            self.write("Alcohol value must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to post data and return id 
+        # Insert into DB
+        query = "INSERT INTO measure (parent_unit_id, sensor_type, timestamp, value) VALUES (" + \
+        str(parent_unit_id) + "," + \
+        str(SENSOR_TYPE_ALCOHOL) + "," + \
+        str(alcohol_timestamp) + "," + \
+        str(alcohol_value) + ")"
 
-        self.write({'id': -1})
+        self.db_conn.execute(query)
+        new_id = None
+        cursor = self.db_conn.execute("SELECT last_insert_rowid()")
+        for row in cursor:
+            new_id = row[0]
+        self.db_conn.commit()
+
+        self.write({'id': new_id})
         self.set_status(HTTPStatus.OK)
 
 
-class SugarHandler(tornado.web.RequestHandler):
+class SugarHandler(BaseHandler):
 
     def get(self, slug):
 
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to get real data
-        sugar = {'sugar': [ \
-        {'id': 27, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 0), 'value': 0.25}, \
-        {'id': 28, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 30), 'value': 0.31}, \
-        {'id': 29, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 60), 'value': 0.32}, \
-        {'id': 30, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 90), 'value': 0.33}, \
-        {'id': 31, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 120), 'value': 0.34}, \
-        {'id': 32, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 150), 'value': 0.46}, \
-        {'id': 33, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 180), 'value': 0.47}, \
-        {'id': 34, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 210), 'value': 0.53}, \
-        {'id': 35, 'parent_unit_id': parent_unit_id, 'timestamp': (int(round(time.time() * 1000)) + 240), 'value': 0.58}]}
+        cursor = self.db_conn.execute("SELECT * FROM (SELECT * FROM measure where \
+        parent_unit_id = " + str(parent_unit_id) + " and sensor_type = " + str(SENSOR_TYPE_SUGAR) \
+        + " order by timestamp desc) limit 100")
 
-        self.write(sugar)
+        measure_list = []
+        for row in cursor:
+            temp_measure = {'id': row[1], 'parent_unit_id': row[2], \
+            'timestamp': row[3], 'value': row[4]}
+            measure_list.append(temp_measure)
+
+        measures = {'sugar': measure_list}
+
+        self.write(measures)
         self.set_status(HTTPStatus.OK)
 
 
@@ -337,6 +513,7 @@ class SugarHandler(tornado.web.RequestHandler):
         try:
             parent_unit_id = int(slug)
         except:
+            self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
@@ -351,12 +528,24 @@ class SugarHandler(tornado.web.RequestHandler):
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        if not isinstance(sugar_value, float):
-            self.write("Sugar value must be of type float.")
+        if not (isinstance(sugar_value, float) or isinstance(sugar_value, int)):
+            self.write("Sugar value must be of type float or int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
-        # TODO make call to DB to post data and return id 
+        # Insert into DB
+        query = "INSERT INTO measure (parent_unit_id, sensor_type, timestamp, value) VALUES (" + \
+        str(parent_unit_id) + "," + \
+        str(SENSOR_TYPE_SUGAR) + "," + \
+        str(sugar_timestamp) + "," + \
+        str(sugar_value) + ")"
 
-        self.write({'id': -1})
+        self.db_conn.execute(query)
+        new_id = None
+        cursor = self.db_conn.execute("SELECT last_insert_rowid()")
+        for row in cursor:
+            new_id = row[0]
+        self.db_conn.commit()
+
+        self.write({'id': new_id})
         self.set_status(HTTPStatus.OK)

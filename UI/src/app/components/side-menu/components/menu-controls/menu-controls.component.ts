@@ -1,11 +1,17 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
+import { RequestManagerService } from '../../../service/request-manager.service';
+
 import { Fermentation } from './fermentation.object';
+import { Recipe } from './recipe.object';
 
 @Component({
   selector: 'menu-controls',
   templateUrl: './menu-controls.component.html',
-  styleUrls: ['./menu-controls.component.css']
+  styleUrls: ['./menu-controls.component.css'],
+  providers: [
+    RequestManagerService
+  ]
 })
 export class MenuControlsComponent implements OnInit
 {
@@ -14,17 +20,23 @@ export class MenuControlsComponent implements OnInit
 
   @Output('selectedFermentation')
   selectedFermentationChanged: EventEmitter<number> = new EventEmitter<number>();
-
   selectedFermentation: number = -1;
 
+  newRecipeName: string = "";
   newRecipeDescription: string = "";
-  newRecipeTemperature: number = 41.0;
-  newRecipePH: number = 6.7;
-  newRecipeAlcohol: number = 5.5;
-  newRecipeSugar: number = 10.0;
+  newRecipeTemperature: number = 0.0;
+  newRecipePH: number = 0.0;
+  newRecipeAlcohol: number = 0.0;
+  newRecipeSugar: number = 0.0;
 
+  newFermentationName: string = "";
   newFermentationDescription: string = "";
+  newFermentationRecipeId: number = -1;
   newFermentationLocation: string = "";
+
+  recipes: Recipe[];
+
+  constructor(private requestManagerService: RequestManagerService) {}
 
   ngOnInit()
   {
@@ -32,45 +44,79 @@ export class MenuControlsComponent implements OnInit
       this.selectedFermentation = +(<HTMLSelectElement> event.target).value;
       this.selectedFermentationChanged.emit(this.selectedFermentation);
     };
+
+    (<HTMLSelectElement> document.getElementById('new-fermentation-recipe-input')).onchange = (event) => {
+      this.newFermentationRecipeId = +(<HTMLSelectElement> event.target).value;
+    };
+
+    this.getRecipes();
   }
 
-  getRecipes(): string[]
+  getRecipes(): void
   {
-    // TODO - GET recipes from API
+    this.recipes = new Array();
 
-    let recipes: string[] = Array();
-
-    recipes.push('Bonne bière de Nick');
-    recipes.push('Bière blonde');
-    recipes.push('Vin rouge fruité');
-    recipes.push('Vin rouge classique');
-    recipes.push('Vin blanc aux agrumes');
-    recipes.push('Alcool de pissenlit');
-    recipes.push('Porto italien sucré');
-
-    return recipes;
+    this.requestManagerService.getRecipes().subscribe(
+      data => {
+        for(let recipe of data['recipes'])
+        {
+          this.recipes.push(new Recipe(recipe));
+        }
+      },
+      err => console.error(err),
+      () => null
+    );
   }
 
   onNewRecipe(): void
   {
-    // TODO - POST new recipe to API
     // TODO - Validation and JSON object
+    let data = {
+      "name": this.newRecipeName,
+      "description": this.newRecipeDescription,
+      "target_temperature": this.newRecipeTemperature,
+      "target_ph": this.newRecipePH,
+      "target_alcohol": this.newRecipeAlcohol,
+      "target_sugar": this.newRecipeSugar
+    };
 
-    console.log('New Recipe');
+    this.requestManagerService.postNewRecipe(data).subscribe(
+      data => { /* TODO - Push new recipe in list*/ },
+      err => console.error(err),
+      () => null
+    );
   }
 
   onNewFermentation(): void
   {
-    // TODO - POST new fermentation to API
     // TODO - Validation and JSON object
 
-    console.log('New Fermentation');
+    let data = {
+      "name": this.newFermentationName,
+      "recipe_id": this.newFermentationRecipeId,
+      "description": this.newFermentationDescription,
+      "start_date": new Date().getMilliseconds(),
+      "is_active": true,
+      "location": this.newFermentationLocation
+    };
+
+    this.requestManagerService.postNewUnit(data).subscribe(
+      data => { /* TODO - Push new fermentation in list*/ },
+      err => console.error(err),
+      () => null
+    );
   }
 
   onEnd(): void
   {
-    // TODO - POST active = false to API for active fermentation
+    let data = {"unit_id": this.fermentationList[this.selectedFermentation].getId(), "field": "is_active", "value": false};
 
+    this.requestManagerService.updateUnitParam(data).subscribe(
+      data => { console.log(data) },
+      err => console.error(err),
+      () => null
+    );
+     
     this.fermentationList.splice(this.selectedFermentation, 1);
     this.selectedFermentation = -1;
     this.selectedFermentationChanged.emit(this.selectedFermentation);

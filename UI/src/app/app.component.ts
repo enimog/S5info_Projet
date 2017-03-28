@@ -1,17 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 
+import { RequestManagerService } from './components/service/request-manager.service';
+
 import { MenuEntryObject } from './components/side-menu/components/menu-entry/menu-entry.object';
 import { Fermentation } from './components/side-menu/components/menu-controls/fermentation.object';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  providers: [
+    RequestManagerService
+  ]
 })
 export class AppComponent implements OnInit
 {
-  menuEntries: MenuEntryObject[] = new Array();
-  fermentationList: Fermentation[] = new Array();
+  menuEntries: MenuEntryObject[];
+  fermentationList: Fermentation[];
+
+  constructor(private requestManagerService: RequestManagerService) {}
 
   ngOnInit()
   {
@@ -21,6 +28,8 @@ export class AppComponent implements OnInit
 
   getMenuEntries()
   {
+    this.menuEntries = new Array();
+
     this.menuEntries.push(new MenuEntryObject('Température', 0, true));
     this.menuEntries.push(new MenuEntryObject('Adicité', 1, false));
     this.menuEntries.push(new MenuEntryObject('Taux d\'alcool', 2, false));
@@ -29,12 +38,22 @@ export class AppComponent implements OnInit
 
   getFermentationList()
   {
-    // TODO - GET fermentation list from API
+    this.fermentationList = new Array();
 
-    this.fermentationList.push(new Fermentation('Fermentation no.1', false));
-    this.fermentationList.push(new Fermentation('Fermentation no.2', false));
-    this.fermentationList.push(new Fermentation('Fermentation no.3', false));
-    this.fermentationList.push(new Fermentation('Fermentation no.4', false));
+    this.requestManagerService.getUnits().subscribe(
+      data => {
+        for(let unit of data['units'])
+        {
+          let newFermentation = new Fermentation(unit, false);
+          if(newFermentation.isActive())
+          {
+            this.fermentationList.push(newFermentation);
+          }
+        }
+      },
+      err => console.error(err),
+      () => null
+    );
   }
 
   getActiveMenuEntry(): number
@@ -50,13 +69,13 @@ export class AppComponent implements OnInit
     return -1;
   }
 
-  getActiveFermentationId(): string
+  getActiveFermentation(): Fermentation
   {
     for(let tempFermentation of this.fermentationList)
     {
       if(tempFermentation.isSelected())
       {
-        return tempFermentation.getId();
+        return tempFermentation;
       }
     }
 

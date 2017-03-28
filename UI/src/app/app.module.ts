@@ -10,6 +10,8 @@ import { MenuEntryComponent } from './components/side-menu/components/menu-entry
 import { MenuControlsComponent } from './components/side-menu/components/menu-controls/menu-controls.component';
 import { ControlViewComponent } from './components/control-view/control-view.component';
 
+import { RequestManagerService } from './components/service/request-manager.service';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -24,7 +26,9 @@ import { ControlViewComponent } from './components/control-view/control-view.com
     FormsModule,
     HttpModule
   ],
-  providers: [],
+  providers: [
+    RequestManagerService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

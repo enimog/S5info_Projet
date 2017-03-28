@@ -2,7 +2,7 @@
     <div class="form-group">
         <select id='fermentation-select' class="form-control">
             <option value='-1'>Sélectionner</option>
-            <option *ngFor='let fermentation of fermentationList' value='{{fermentationList.indexOf(fermentation)}}'>{{fermentation.getId()}}</option>
+            <option *ngFor='let fermentation of fermentationList' value='{{fermentationList.indexOf(fermentation)}}'>{{fermentation.getName()}}</option>
         </select>
 
         <button type="button" class="btn btn-primary c-menu-controls-btn" data-toggle="modal" data-target="#new-modal">Nouveau</button>
@@ -41,6 +41,12 @@
         </button>
       </div>
       <div class="modal-body">
+        <div class="form-group row">
+            <label for="new-recipe-name-input" class="col-3 col-form-label">Nom</label>
+            <div class="col-9">
+                <input class="form-control" type="text" [(ngModel)]="newRecipeName" id="new-recipe-name-input">
+            </div>
+        </div>
         <div class="form-group row">
             <label for="new-recipe-description-input" class="col-3 col-form-label">Description</label>
             <div class="col-9">
@@ -91,6 +97,12 @@
       </div>
       <div class="modal-body">
         <div class="form-group row">
+            <label for="new-fermentation-name-input" class="col-3 col-form-label">Nom</label>
+            <div class="col-9">
+                <input class="form-control" type="text" [(ngModel)]="newFermentationName" id="new-fermentation-name-input">
+            </div>
+        </div>
+        <div class="form-group row">
             <label for="new-fermentation-description-input" class="col-3 col-form-label">Description</label>
             <div class="col-9">
                 <textarea class="form-control" rows="3" placeholder='Description de la fermentation.' [(ngModel)]="newFermentationDescription" id="new-fermentation-description-input"></textarea>
@@ -107,7 +119,7 @@
             <div class="col-9">
                 <select id='new-fermentation-recipe-input' class="form-control">
                     <option value='-1'>Aucune</option>
-                    <option *ngFor='let recipe of getRecipes()' value='{{recipe}}'>{{recipe}}</option>
+                    <option *ngFor='let recipe of recipes' value='{{recipe.getId()}}'>{{recipe.getName()}}</option>
                 </select>
             </div>
         </div>

@@ -1,5 +1,4 @@
 from http import HTTPStatus
-
 import tornado.ioloop
 import tornado.web
 
@@ -7,7 +6,6 @@ from handlers import RootHandler, RecipesHandler, UnitsHandler, \
 TemperatureHandler, PHHandler, AlcoholHandler, SugarHandler
 
 api_port = 8080
-
 
 def make_api_server():
 
