@@ -74,13 +74,17 @@ export class ControlViewComponent implements OnInit, OnChanges
     );
   }
 
+  getStartDate(): string
+  {
+    return dateformat(new Date(this.fermentation.getStartDate()), 'yy/mm/dd-HH:MM:ss');
+  }
+
   getEmptyData(): any
   {
     // Create the data table.
     let dataArray = [
       ['Aucune donnée', 'Aucune donnée'],
-      ['0',  0],
-      ['100',  0]
+      ['0',  0]
     ];
 
     return w.google.visualization.arrayToDataTable(dataArray);
@@ -94,6 +98,11 @@ export class ControlViewComponent implements OnInit, OnChanges
 
     this.requestManagerService.getTemperature(this.fermentation.getId()).subscribe(
       data => {
+        if(data['temperature'].length < 1)
+        {
+          dataArray.push(['0', 0]);
+        }
+
         for(let temperature of data['temperature'])
         {
           dataArray.push([dateformat(new Date(temperature['timestamp']), 'yy/mm/dd-HH:MM:ss'),  temperature['value']]);
@@ -115,6 +124,12 @@ export class ControlViewComponent implements OnInit, OnChanges
 
     this.requestManagerService.getPH(this.fermentation.getId()).subscribe(
       data => {
+        if(data['ph'].length < 1)
+        {
+          dataArray.push(['0', 0]);
+        }
+
+
         for(let ph of data['ph'])
         {
           dataArray.push([dateformat(new Date(ph['timestamp']), 'yy/mm/dd-HH:MM:ss'),  ph['value']]);
@@ -136,6 +151,11 @@ export class ControlViewComponent implements OnInit, OnChanges
 
     this.requestManagerService.getAlcohol(this.fermentation.getId()).subscribe(
       data => {
+        if(data['alcohol'].length < 1)
+        {
+          dataArray.push(['0', 0]);
+        }
+
         for(let alcohol of data['alcohol'])
         {
           dataArray.push([dateformat(new Date(alcohol['timestamp']), 'yy/mm/dd-HH:MM:ss'),  alcohol['value']]);
@@ -157,6 +177,11 @@ export class ControlViewComponent implements OnInit, OnChanges
 
     this.requestManagerService.getSugar(this.fermentation.getId()).subscribe(
       data => {
+        if(data['sugar'].length < 1)
+        {
+          dataArray.push(['0', 0]);
+        }
+
         for(let sugar of data['sugar'])
         {
           dataArray.push([dateformat(new Date(sugar['timestamp']), 'yy/mm/dd-HH:MM:ss'),  sugar['value']]);

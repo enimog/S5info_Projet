@@ -81,7 +81,12 @@ export class MenuControlsComponent implements OnInit
     };
 
     this.requestManagerService.postNewRecipe(data).subscribe(
-      data => { /* TODO - Push new recipe in list*/ },
+      data => { 
+        if(data['id'])
+        {
+          this.getRecipes();
+        }
+      },
       err => console.error(err),
       () => null
     );
@@ -95,13 +100,17 @@ export class MenuControlsComponent implements OnInit
       "name": this.newFermentationName,
       "recipe_id": this.newFermentationRecipeId,
       "description": this.newFermentationDescription,
-      "start_date": new Date().getMilliseconds(),
       "is_active": true,
       "location": this.newFermentationLocation
     };
 
     this.requestManagerService.postNewUnit(data).subscribe(
-      data => { /* TODO - Push new fermentation in list*/ },
+      data => { 
+        if(data['id'])
+        {
+          location.reload();
+        } 
+      },
       err => console.error(err),
       () => null
     );

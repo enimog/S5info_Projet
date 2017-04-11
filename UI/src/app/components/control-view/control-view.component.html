@@ -32,14 +32,110 @@
         </div>
     </div>
 
-    <div *ngIf='fermentation == null' class="c-control-view-selector form-group row">
+    <div *ngIf='value != 10 && fermentation == null' class="c-control-view-selector form-group row">
         <label for="selector-input" class="col-md-11 offset-md-1 col-form-label">-</label>
         <div class="col-md-2 offset-md-1">
             <input disabled class="form-control" type="number" value="0" max='0' min='0' id="selector-input">
         </div>
     </div>
 
-    <div class="c-control-view-chart-container row">
+    <div *ngIf='value===10 && fermentation != null' class="c-control-view-selector form-group">
+        
+        <!-- ID -->
+        <div class='row'>
+            <label for="id-info" class="col-md-2 offset-md-1 col-form-label">ID</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="number" value="{{fermentation.getId()}}" id="id-info">
+            </div>
+        </div>
+
+        <!-- NAME -->
+        <div class='row'>
+            <label for="name-info" class="col-md-2 offset-md-1 col-form-label">Name</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="text" value="{{fermentation.getName()}}" id="name-info">
+            </div>
+        </div>
+
+        <!-- DESCRIPTION -->
+        <div class='row'>
+            <label for="description-info" class="col-md-2 offset-md-1 col-form-label">Description</label>
+            <div class="col-md-4">
+                <textarea disabled class="form-control info-data-field" rows="3"  value="{{fermentation.getDescription()}}" id="description-info"></textarea>
+            </div>
+        </div>
+
+        <!-- RECIPE ID -->
+        <div class='row'>
+            <label for="recipe-id-info" class="col-md-2 offset-md-1 col-form-label">Recipe ID</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="number" value="{{fermentation.getRecipeId()}}" id="recipe-id-info">
+            </div>
+        </div>
+
+        <!-- START_DATE -->
+        <div class='row'>
+            <label for="start-date-info" class="col-md-2 offset-md-1 col-form-label">Date de début</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="text" value="{{getStartDate()}}" id="start-date-info">
+            </div>
+        </div>
+
+        <!-- IS ACTIVE -->
+        <div class='row'>
+            <label for="active-info" class="col-md-2 offset-md-1 col-form-label">Active</label>
+            <div *ngIf='fermentation.isActive()' class="col-md-4">
+                <input disabled class="form-control info-data-field info-data-field-true" type="text" value="" id="active-info">
+            </div>
+            <div *ngIf='!fermentation.isActive()' class="col-md-4">
+                <input disabled class="form-control info-data-field info-data-field-false" type="text" value="" id="active-info">
+            </div>
+        </div>
+
+        <!-- LOCATION -->
+        <div class='row'>
+            <label for="location-info" class="col-md-2 offset-md-1 col-form-label">Emplacement</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="text" value="{{fermentation.getLocation()}}" id="location-info">
+            </div>
+        </div>
+
+        <!-- TEMPERATURE -->
+        <div class='row'>
+            <label for="temperature-info" class="col-md-2 offset-md-1 col-form-label">Température (°C)</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="number" value="{{fermentation.getTemperature()}}" id="temperature-info">
+            </div>
+        </div>
+
+        <!-- PH -->
+        <div class='row'>
+            <label for="ph-info" class="col-md-2 offset-md-1 col-form-label">Acidité (pH)</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="number" value="{{fermentation.getPH()}}" id="ph-info">
+            </div>
+        </div>
+
+        <!-- ALCOHOL -->
+        <div class='row'>
+            <label for="alcohol-info" class="col-md-2 offset-md-1 col-form-label">Taux d'alcool (%)</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="number" value="{{fermentation.getAlcohol()}}" id="alcohol-info">
+            </div>
+        </div>
+
+        <!-- SUGAR -->
+        <div class='row'>
+            <label for="sugar-info" class="col-md-2 offset-md-1 col-form-label">Taux de sucre(mg/L)</label>
+            <div class="col-md-4">
+                <input disabled class="form-control info-data-field" type="number" value="{{fermentation.getSugar()}}" id="sugar-info">
+            </div>
+        </div>
+
+        
+    </div>
+
+    <div *ngIf='value != 10' class="c-control-view-chart-container row">
         <div class="offset-md-1 col-md-10">
             <div id="parameter-chart" class='c-control-view-chart'></div>
         </div>

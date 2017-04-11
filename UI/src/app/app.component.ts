@@ -30,10 +30,11 @@ export class AppComponent implements OnInit
   {
     this.menuEntries = new Array();
 
+    this.menuEntries.push(new MenuEntryObject('Information', 10, false));
     this.menuEntries.push(new MenuEntryObject('Température', 0, true));
     this.menuEntries.push(new MenuEntryObject('Adicité', 1, false));
     this.menuEntries.push(new MenuEntryObject('Taux d\'alcool', 2, false));
-    this.menuEntries.push(new MenuEntryObject('Taux de sucre', 3, false));
+    this.menuEntries.push(new MenuEntryObject('Taux de sucre', 3, false));   
   }
 
   getFermentationList()
@@ -45,10 +46,10 @@ export class AppComponent implements OnInit
         for(let unit of data['units'])
         {
           let newFermentation = new Fermentation(unit, false);
-          if(newFermentation.isActive())
-          {
-            this.fermentationList.push(newFermentation);
-          }
+          //if(newFermentation.isActive())
+          //{
+          this.fermentationList.push(newFermentation);
+          //}
         }
       },
       err => console.error(err),

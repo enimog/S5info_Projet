@@ -21,3 +21,18 @@
     height: 100%;
     width: 100%;
 }
+
+.info-data-field
+{
+    cursor: default !important;
+}
+
+.info-data-field-true
+{
+    background: #007B52;
+}
+
+.info-data-field-false
+{
+    background: #d9534f;
+}

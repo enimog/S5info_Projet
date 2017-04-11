@@ -18,6 +18,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def initialize(self):
         self.db_conn = sqlite3.connect('E:\\MaximeBreton\\OneDrive\\Documents\\universite\\s5\\projet\\Project.db')
+        #self.db_conn = sqlite3.connect('C:\\Users\\Maxime\\OneDrive\\Documents\\universite\\s5\projet\\Project.db')
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -163,7 +164,7 @@ class UnitsHandler(BaseHandler):
         unit_name = units['name']
         unit_description = units['description']
         unit_recipe_id = units['recipe_id']
-        unit_start_date = units['start_date']
+        unit_start_date = int(round(time.time() * 1000))
         unit_is_active = units['is_active']
         unit_location = units['location']
 
@@ -180,11 +181,6 @@ class UnitsHandler(BaseHandler):
 
         if not isinstance(unit_recipe_id, int):
             self.write("Unit recipe ID must be of type int.")
-            self.set_status(HTTPStatus.BAD_REQUEST)
-            return
-
-        if not isinstance(unit_start_date, int):
-            self.write("Unit start date must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
 
@@ -306,17 +302,13 @@ class TemperatureHandler(BaseHandler):
             self.write("Unit ID must be of type int.")
             self.set_status(HTTPStatus.BAD_REQUEST)
             return
-
+        
+        print(self.request.body)
         temperature = json.loads(self.request.body.decode('utf-8'))
 
         # Parsing received values
-        temperature_timestamp = temperature['timestamp']
+        temperature_timestamp = int(round(time.time() * 1000))
         temperature_value = temperature['value']
-
-        if not isinstance(temperature_timestamp, int):
-            self.write("Temperature timestamp must be of type int.")
-            self.set_status(HTTPStatus.BAD_REQUEST)
-            return
 
         if not (isinstance(temperature_value, float) or isinstance(temperature_value, int)):
             self.write("Temperature value must be of type float or int.")
@@ -380,13 +372,8 @@ class PHHandler(BaseHandler):
         ph = json.loads(self.request.body.decode('utf-8'))
 
         # Parsing received values
-        ph_timestamp = ph['timestamp']
+        ph_timestamp = int(round(time.time() * 1000))
         ph_value = ph['value']
-
-        if not isinstance(ph_timestamp, int):
-            self.write("PH timestamp must be of type int.")
-            self.set_status(HTTPStatus.BAD_REQUEST)
-            return
 
         if not (isinstance(ph_value, float) or isinstance(ph_value, int)):
             self.write("PH value must be of type float or int.")
@@ -450,13 +437,8 @@ class AlcoholHandler(BaseHandler):
         alcohol = json.loads(self.request.body.decode('utf-8'))
 
         # Parsing received values
-        alcohol_timestamp = alcohol['timestamp']
+        alcohol_timestamp = int(round(time.time() * 1000))
         alcohol_value = alcohol['value']
-
-        if not isinstance(alcohol_timestamp, int):
-            self.write("Alcohol timestamp must be of type int.")
-            self.set_status(HTTPStatus.BAD_REQUEST)
-            return
 
         if not (isinstance(alcohol_value, float) or isinstance(alcohol_value, int)):
             self.write("Alcohol value must be of type float or int.")
@@ -520,13 +502,8 @@ class SugarHandler(BaseHandler):
         sugar = json.loads(self.request.body.decode('utf-8'))
 
         # Parsing received values
-        sugar_timestamp = sugar['timestamp']
+        sugar_timestamp = int(round(time.time() * 1000))
         sugar_value = sugar['value']
-
-        if not isinstance(sugar_timestamp, int):
-            self.write("Sugar timestamp must be of type int.")
-            self.set_status(HTTPStatus.BAD_REQUEST)
-            return
 
         if not (isinstance(sugar_value, float) or isinstance(sugar_value, int)):
             self.write("Sugar value must be of type float or int.")
